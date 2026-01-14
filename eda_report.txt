@@ -1,0 +1,49 @@
+
+======================================================================
+EXPLORATORY DATA ANALYSIS REPORT - IMDb TOP 250 MOVIES
+======================================================================
+
+DATASET OVERVIEW
+--------------------------------------------------
+• Total Movies: 250
+• Time Period: 1920 - 2022
+• Columns: position, title, year, rating, rating_category, movie_age, decade, quality_score, imdb_id, scraped_date
+
+KEY STATISTICS
+--------------------------------------------------
+• Average Rating: 8.31
+• Median Rating: 8.20
+• Rating Range: 8.00 - 9.30
+• Highest Rated: The Shawshank Redemption (9.30)
+• Lowest Rated: The Incredibles (8.00)
+
+TREND ANALYSIS
+--------------------------------------------------
+• Rating vs Year Correlation: 0.207
+• Position vs Rating Correlation: -0.838
+• Strongest Trend: Higher ranked movies (lower position) have significantly higher ratings
+
+HYPOTHESIS TESTING RESULTS
+--------------------------------------------------
+• Top 10 vs Bottom 10: Significant difference
+• P-value: 0.000000
+• Top 10 Average: 9.01
+• Bottom 10 Average: 8.15
+
+DATA QUALITY
+--------------------------------------------------
+• Rating Outliers: 8 movies
+• Year Outliers: 0 movies
+• Duplicates: None found
+• Missing Values: None found
+
+RECOMMENDATIONS
+--------------------------------------------------
+1. The strong negative correlation between position and rating confirms IMDb ranking logic
+2. Consider adding genre data for more nuanced analysis
+3. Investigate why certain decades (2000s, 1980s) have higher average ratings
+4. Explore additional factors like director, budget, or awards for deeper insights
+
+======================================================================
+EDA COMPLETED: 2026-01-14 19:07:46
+======================================================================
