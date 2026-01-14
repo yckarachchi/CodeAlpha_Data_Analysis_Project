@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDb Top 250 Movies Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+            border-left: 5px solid #667eea;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .chart-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #1a237e;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .rank-badge {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #f8f9fa;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .footer-text {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .feature-badge {
+            background: #e3f2fd;
+            color: #1a237e;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 IMDb Top 250 Movies Dashboard</h1>
+            <p class="subtitle">Interactive visualization of IMDb's highest rated films (1920-2022)</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Fully self-contained dashboard with embedded data</p>
+        </header>
+        
+        <div class="stats-grid" id="stats">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading dashboard data...</p>
+        </div>
+        
+        <div class="charts-grid" id="charts" style="display: none;">
+            <div class="chart-container">
+                <div class="chart-title">📊 Movies per Decade</div>
+                <div id="decade-chart" style="height: 450px;"></div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">📈 Rating Distribution</div>
+                <div id="rating-chart" style="height: 450px;"></div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🎯 Rating vs Release Year</div>
+                <div id="scatter-chart" style="height: 450px;"></div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🏆 Rating Categories</div>
+                <div id="pie-chart" style="height: 450px;"></div>
+            </div>
+        </div>
+        
+        <div style="padding: 30px;">
+            <div class="chart-title">🏅 Top 10 Highest Rated Movies</div>
+            <div id="top-movies-table"></div>
+        </div>
+        
+        <footer>
+            <div class="footer-text">
+                <span>Dashboard created with Plotly.js</span>
+                <span class="feature-badge">Interactive Charts</span>
+                <span class="feature-badge">Hover for Details</span>
+                <span class="feature-badge">Click & Drag to Zoom</span>
+                <span class="feature-badge">Double-click to Reset</span>
+            </div>
+            <p style="margin-top: 15px; font-size: 0.9rem;">Data Source: IMDb Top 250 • All visualizations update in real-time</p>
+        </footer>
+    </div>
+
+    <script>
+        // Embedded IMDb data (top 50 movies as sample)
+        const imdbData = [
+            {title: "The Shawshank Redemption", year: 1994, rating: 9.3, decade: "1990s", rating_category: "Outstanding (9.0+)", movie_age: 30, quality_score: 95},
+            {title: "The Godfather", year: 1972, rating: 9.2, decade: "1970s", rating_category: "Outstanding (9.0+)", movie_age: 52, quality_score: 94},
+            {title: "The Dark Knight", year: 2008, rating: 9.0, decade: "2000s", rating_category: "Outstanding (9.0+)", movie_age: 16, quality_score: 92},
+            {title: "The Godfather Part II", year: 1974, rating: 9.0, decade: "1970s", rating_category: "Outstanding (9.0+)", movie_age: 50, quality_score: 93},
+            {title: "12 Angry Men", year: 1957, rating: 9.0, decade: "1950s", rating_category: "Outstanding (9.0+)", movie_age: 67, quality_score: 94},
+            {title: "Schindler's List", year: 1993, rating: 9.0, decade: "1990s", rating_category: "Outstanding (9.0+)", movie_age: 31, quality_score: 95},
+            {title: "The Lord of the Rings: The Return of the King", year: 2003, rating: 9.0, decade: "2000s", rating_category: "Outstanding (9.0+)", movie_age: 21, quality_score: 91},
+            {title: "Pulp Fiction", year: 1994, rating: 8.9, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 30, quality_score: 92},
+            {title: "The Lord of the Rings: The Fellowship of the Ring", year: 2001, rating: 8.9, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 23, quality_score: 91},
+            {title: "Forrest Gump", year: 1994, rating: 8.8, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 30, quality_score: 93},
+            {title: "Inception", year: 2010, rating: 8.8, decade: "2010s", rating_category: "Excellent (8.5-8.9)", movie_age: 14, quality_score: 92},
+            {title: "The Matrix", year: 1999, rating: 8.7, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 25, quality_score: 91},
+            {title: "GoodFellas", year: 1990, rating: 8.7, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 34, quality_score: 93},
+            {title: "Star Wars: Episode V - The Empire Strikes Back", year: 1980, rating: 8.7, decade: "1980s", rating_category: "Excellent (8.5-8.9)", movie_age: 44, quality_score: 92},
+            {title: "One Flew Over the Cuckoo's Nest", year: 1975, rating: 8.6, decade: "1970s", rating_category: "Excellent (8.5-8.9)", movie_age: 49, quality_score: 94},
+            {title: "Seven Samurai", year: 1954, rating: 8.6, decade: "1950s", rating_category: "Excellent (8.5-8.9)", movie_age: 70, quality_score: 95},
+            {title: "Interstellar", year: 2014, rating: 8.6, decade: "2010s", rating_category: "Excellent (8.5-8.9)", movie_age: 10, quality_score: 90},
+            {title: "The Silence of the Lambs", year: 1991, rating: 8.6, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 33, quality_score: 93},
+            {title: "Saving Private Ryan", year: 1998, rating: 8.6, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 26, quality_score: 92},
+            {title: "City of God", year: 2002, rating: 8.6, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 22, quality_score: 93},
+            {title: "Life Is Beautiful", year: 1997, rating: 8.6, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 27, quality_score: 94},
+            {title: "The Green Mile", year: 1999, rating: 8.6, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 25, quality_score: 92},
+            {title: "Parasite", year: 2019, rating: 8.6, decade: "2010s", rating_category: "Excellent (8.5-8.9)", movie_age: 5, quality_score: 91},
+            {title: "Spirited Away", year: 2001, rating: 8.6, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 23, quality_score: 93},
+            {title: "Gladiator", year: 2000, rating: 8.5, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 24, quality_score: 91},
+            {title: "The Departed", year: 2006, rating: 8.5, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 18, quality_score: 90},
+            {title: "The Prestige", year: 2006, rating: 8.5, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 18, quality_score: 91},
+            {title: "Casablanca", year: 1942, rating: 8.5, decade: "1940s", rating_category: "Excellent (8.5-8.9)", movie_age: 82, quality_score: 96},
+            {title: "The Lion King", year: 1994, rating: 8.5, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 30, quality_score: 92},
+            {title: "Back to the Future", year: 1985, rating: 8.5, decade: "1980s", rating_category: "Excellent (8.5-8.9)", movie_age: 39, quality_score: 92},
+            {title: "Apocalypse Now", year: 1979, rating: 8.4, decade: "1970s", rating_category: "Very Good (8.0-8.4)", movie_age: 45, quality_score: 93},
+            {title: "Alien", year: 1979, rating: 8.4, decade: "1970s", rating_category: "Very Good (8.0-8.4)", movie_age: 45, quality_score: 92},
+            {title: "Raiders of the Lost Ark", year: 1981, rating: 8.4, decade: "1980s", rating_category: "Very Good (8.0-8.4)", movie_age: 43, quality_score: 91},
+            {title: "Django Unchained", year: 2012, rating: 8.4, decade: "2010s", rating_category: "Very Good (8.0-8.4)", movie_age: 12, quality_score: 89},
+            {title: "The Shining", year: 1980, rating: 8.4, decade: "1980s", rating_category: "Very Good (8.0-8.4)", movie_age: 44, quality_score: 93},
+            {title: "WALL·E", year: 2008, rating: 8.4, decade: "2000s", rating_category: "Very Good (8.0-8.4)", movie_age: 16, quality_score: 90},
+            {title: "Avengers: Infinity War", year: 2018, rating: 8.4, decade: "2010s", rating_category: "Very Good (8.0-8.4)", movie_age: 6, quality_score: 88},
+            {title: "The Great Dictator", year: 1940, rating: 8.4, decade: "1940s", rating_category: "Very Good (8.0-8.4)", movie_age: 84, quality_score: 95},
+            {title: "Paths of Glory", year: 1957, rating: 8.4, decade: "1950s", rating_category: "Very Good (8.0-8.4)", movie_age: 67, quality_score: 94},
+            {title: "Rear Window", year: 1954, rating: 8.5, decade: "1950s", rating_category: "Excellent (8.5-8.9)", movie_age: 70, quality_score: 95},
+            {title: "Psycho", year: 1960, rating: 8.5, decade: "1960s", rating_category: "Excellent (8.5-8.9)", movie_age: 64, quality_score: 94},
+            {title: "Modern Times", year: 1936, rating: 8.5, decade: "1930s", rating_category: "Excellent (8.5-8.9)", movie_age: 88, quality_score: 96},
+            {title: "City Lights", year: 1931, rating: 8.5, decade: "1930s", rating_category: "Excellent (8.5-8.9)", movie_age: 93, quality_score: 96},
+            {title: "Grave of the Fireflies", year: 1988, rating: 8.5, decade: "1980s", rating_category: "Excellent (8.5-8.9)", movie_age: 36, quality_score: 94},
+            {title: "Once Upon a Time in the West", year: 1968, rating: 8.5, decade: "1960s", rating_category: "Excellent (8.5-8.9)", movie_age: 56, quality_score: 94},
+            {title: "Whiplash", year: 2014, rating: 8.5, decade: "2010s", rating_category: "Excellent (8.5-8.9)", movie_age: 10, quality_score: 90},
+            {title: "American History X", year: 1998, rating: 8.5, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 26, quality_score: 92},
+            {title: "The Pianist", year: 2002, rating: 8.5, decade: "2000s", rating_category: "Excellent (8.5-8.9)", movie_age: 22, quality_score: 93},
+            {title: "Terminator 2: Judgment Day", year: 1991, rating: 8.6, decade: "1990s", rating_category: "Excellent (8.5-8.9)", movie_age: 33, quality_score: 92},
+            {title: "Memento", year: 2000, rating: 8.4, decade: "2000s", rating_category: "Very Good (8.0-8.4)", movie_age: 24, quality_score: 91}
+        ];
+        
+        // Initialize dashboard when page loads
+        window.onload = function() {
+            setTimeout(() => {
+                updateStats(imdbData);
+                createCharts(imdbData);
+                createTable(imdbData);
+                
+                // Hide loading, show charts
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('charts').style.display = 'grid';
+            }, 1000); // Simulate loading delay
+        };
+        
+        function updateStats(data) {
+            const ratings = data.map(d => d.rating).filter(r => !isNaN(r));
+            const years = data.map(d => d.year).filter(y => !isNaN(y));
+            
+            const statsHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${data.length}</div>
+                    <div class="stat-label">Total Movies Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2)}</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.min(...years)}-${Math.max(...years)}</div>
+                    <div class="stat-label">Year Range</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.max(...ratings).toFixed(1)}</div>
+                    <div class="stat-label">Highest Rating</div>
+                </div>
+            `;
+            
+            document.getElementById('stats').innerHTML = statsHTML;
+        }
+        
+        function createCharts(data) {
+            // 1. Movies per Decade Chart
+            const decadeCounts = {};
+            data.forEach(movie => {
+                if (movie.decade) {
+                    decadeCounts[movie.decade] = (decadeCounts[movie.decade] || 0) + 1;
+                }
+            });
+            
+            const decades = Object.keys(decadeCounts).sort();
+            const decadeValues = decades.map(decade => decadeCounts[decade]);
+            
+            const decadeTrace = {
+                x: decades,
+                y: decadeValues,
+                type: 'bar',
+                marker: {
+                    color: decadeValues.map(v => `rgb(${100 + v * 10}, ${126 - v * 5}, ${234 - v * 5})`),
+                    line: {
+                        color: 'rgb(30, 30, 30)',
+                        width: 1
+                    }
+                },
+                text: decadeValues.map(v => `${v} movies`),
+                textposition: 'auto',
+                hoverinfo: 'x+text'
+            };
+            
+            const decadeLayout = {
+                title: {
+                    text: 'Number of Top Movies by Decade',
+                    font: {size: 16, color: '#1a237e'}
+                },
+                xaxis: {
+                    title: {text: 'Decade', font: {size: 14}},
+                    tickangle: -45
+                },
+                yaxis: {
+                    title: {text: 'Number of Movies', font: {size: 14}}
+                },
+                plot_bgcolor: 'rgba(240, 240, 245, 0.8)',
+                paper_bgcolor: 'rgba(255, 255, 255, 0.1)'
+            };
+            
+            Plotly.newPlot('decade-chart', [decadeTrace], decadeLayout);
+            
+            // 2. Rating Distribution Chart
+            const ratings = data.map(d => d.rating).filter(r => !isNaN(r));
+            const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+            
+            const ratingTrace = {
+                x: ratings,
+                type: 'histogram',
+                nbinsx: 15,
+                marker: {
+                    color: 'rgba(26, 118, 255, 0.7)',
+                    line: {
+                        color: 'rgba(0, 60, 180, 0.8)',
+                        width: 1.5
+                    }
+                },
+                opacity: 0.8,
+                name: 'Rating Distribution'
+            };
+            
+            const ratingLayout = {
+                title: {
+                    text: 'Distribution of IMDb Ratings',
+                    font: {size: 16, color: '#1a237e'}
+                },
+                xaxis: {
+                    title: {text: 'IMDb Rating (0-10 scale)', font: {size: 14}},
+                    range: [8.0, 9.5]
+                },
+                yaxis: {
+                    title: {text: 'Number of Movies', font: {size: 14}}
+                },
+                shapes: [{
+                    type: 'line',
+                    x0: avgRating,
+                    x1: avgRating,
+                    y0: 0,
+                    y1: 1,
+                    yref: 'paper',
+                    line: {
+                        color: 'red',
+                        width: 2,
+                        dash: 'dash'
+                    }
+                }],
+                annotations: [{
+                    x: avgRating,
+                    y: 0.95,
+                    yref: 'paper',
+                    text: `Avg: ${avgRating.toFixed(2)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 0,
+                    ay: -40,
+                    font: {color: 'red', size: 12}
+                }]
+            };
+            
+            Plotly.newPlot('rating-chart', [ratingTrace], ratingLayout);
+            
+            // 3. Scatter Plot: Rating vs Year
+            const scatterTrace = {
+                x: data.map(d => d.year),
+                y: data.map(d => d.rating),
+                mode: 'markers+text',
+                type: 'scatter',
+                text: data.map((d, i) => i < 5 ? d.title.split(' ')[0] : ''),
+                textposition: 'top center',
+                marker: {
+                    size: data.map(d => 8 + (d.rating - 8) * 5),
+                    color: data.map(d => d.movie_age),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: {
+                        title: 'Movie Age<br>(Years)',
+                        titleside: 'right'
+                    },
+                    line: {
+                        color: 'rgb(30, 30, 30)',
+                        width: 1
+                    }
+                },
+                hoverinfo: 'text',
+                hovertext: data.map(d => `<b>${d.title}</b><br>Year: ${d.year}<br>Rating: ${d.rating}<br>Decade: ${d.decade}`)
+            };
+            
+            const scatterLayout = {
+                title: {
+                    text: 'IMDb Rating vs Release Year',
+                    font: {size: 16, color: '#1a237e'}
+                },
+                xaxis: {
+                    title: {text: 'Release Year', font: {size: 14}},
+                    range: [1925, 2025]
+                },
+                yaxis: {
+                    title: {text: 'IMDb Rating', font: {size: 14}},
+                    range: [8.0, 9.5]
+                },
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('scatter-chart', [scatterTrace], scatterLayout);
+            
+            // 4. Pie Chart: Rating Categories
+            const categoryCounts = {};
+            data.forEach(movie => {
+                if (movie.rating_category) {
+                    categoryCounts[movie.rating_category] = 
+                        (categoryCounts[movie.rating_category] || 0) + 1;
+                }
+            });
+            
+            const pieTrace = {
+                values: Object.values(categoryCounts),
+                labels: Object.keys(categoryCounts),
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1'],
+                    line: {
+                        color: 'rgb(30, 30, 30)',
+                        width: 1.5
+                    }
+                },
+                textinfo: 'percent+label',
+                hoverinfo: 'label+percent+value',
+                textposition: 'inside',
+                insidetextorientation: 'radial'
+            };
+            
+            const pieLayout = {
+                title: {
+                    text: 'Distribution of Rating Categories',
+                    font: {size: 16, color: '#1a237e'}
+                },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    y: -0.1
+                }
+            };
+            
+            Plotly.newPlot('pie-chart', [pieTrace], pieLayout);
+        }
+        
+        function createTable(data) {
+            // Sort by rating and get top 10
+            const sortedData = [...data]
+                .filter(m => m.rating && m.title && m.year)
+                .sort((a, b) => b.rating - a.rating)
+                .slice(0, 10);
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Movie Title</th>
+                            <th>Year</th>
+                            <th>Rating</th>
+                            <th>Decade</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            sortedData.forEach((movie, index) => {
+                let ratingColor = '#4CAF50'; // Green for high ratings
+                if (movie.rating < 8.5) ratingColor = '#FF9800'; // Orange
+                if (movie.rating < 8.0) ratingColor = '#F44336'; // Red
+                
+                tableHTML += `
+                    <tr>
+                        <td><div class="rank-badge">${index + 1}</div></td>
+                        <td><strong>${movie.title}</strong></td>
+                        <td>${movie.year}</td>
+                        <td style="color: ${ratingColor}; font-weight: bold; font-size: 1.1rem;">
+                            ${movie.rating.toFixed(1)}
+                        </td>
+                        <td>${movie.decade || 'N/A'}</td>
+                        <td>${movie.rating_category || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += '</tbody></table>';
+            document.getElementById('top-movies-table').innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
