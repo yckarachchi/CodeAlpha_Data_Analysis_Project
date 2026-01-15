@@ -6,7 +6,7 @@ EXPLORATORY DATA ANALYSIS REPORT - IMDb TOP 250 MOVIES
 DATASET OVERVIEW
 --------------------------------------------------
 • Total Movies: 250
-• Time Period: 1920 - 2022
+• Time Period: 1921 - 2023
 • Columns: position, title, year, rating, rating_category, movie_age, decade, quality_score, imdb_id, scraped_date
 
 KEY STATISTICS
@@ -19,7 +19,7 @@ KEY STATISTICS
 
 TREND ANALYSIS
 --------------------------------------------------
-• Rating vs Year Correlation: 0.207
+• Rating vs Year Correlation: 0.146
 • Position vs Rating Correlation: -0.838
 • Strongest Trend: Higher ranked movies (lower position) have significantly higher ratings
 
@@ -45,5 +45,5 @@ RECOMMENDATIONS
 4. Explore additional factors like director, budget, or awards for deeper insights
 
 ======================================================================
-EDA COMPLETED: 2026-01-14 19:07:46
+EDA COMPLETED: 2026-01-15 12:17:20
 ======================================================================

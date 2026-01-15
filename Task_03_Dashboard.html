@@ -14,9 +14,21 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Fallback background color */
+            background-color: #283593;
+            /* Smoother gradient with defined direction */
+            background: linear-gradient(135deg, #283593 0%, #667eea 50%, #764ba2 100%);
+            /* Fix: Use viewport height unit */
             min-height: 100vh;
+            /* Fix: Add pixel unit */
             padding: 20px;
+            /* Improve text rendering */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Center content on large screens */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
         
         .container {
@@ -217,7 +229,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎬 IMDb Top 250 Movies Dashboard</h1>
+            <h1> IMDb Top 250 Movies Dashboard</h1>
             <p class="subtitle">Interactive visualization of IMDb's highest rated films (1920-2022)</p>
             <p style="margin-top: 10px; opacity: 0.8;">Fully self-contained dashboard with embedded data</p>
         </header>
@@ -233,28 +245,28 @@
         
         <div class="charts-grid" id="charts" style="display: none;">
             <div class="chart-container">
-                <div class="chart-title">📊 Movies per Decade</div>
+                <div class="chart-title"> Movies per Decade</div>
                 <div id="decade-chart" style="height: 450px;"></div>
             </div>
             
             <div class="chart-container">
-                <div class="chart-title">📈 Rating Distribution</div>
+                <div class="chart-title"> Rating Distribution</div>
                 <div id="rating-chart" style="height: 450px;"></div>
             </div>
             
             <div class="chart-container">
-                <div class="chart-title">🎯 Rating vs Release Year</div>
+                <div class="chart-title"> Rating vs Release Year</div>
                 <div id="scatter-chart" style="height: 450px;"></div>
             </div>
             
             <div class="chart-container">
-                <div class="chart-title">🏆 Rating Categories</div>
+                <div class="chart-title"> Rating Categories</div>
                 <div id="pie-chart" style="height: 450px;"></div>
             </div>
         </div>
         
         <div style="padding: 30px;">
-            <div class="chart-title">🏅 Top 10 Highest Rated Movies</div>
+            <div class="chart-title"> Top 10 Highest Rated Movies</div>
             <div id="top-movies-table"></div>
         </div>
         
